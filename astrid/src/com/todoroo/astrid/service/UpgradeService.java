@@ -36,6 +36,7 @@ import com.todoroo.astrid.utility.AstridPreferences;
 
 public final class UpgradeService {
 
+    public static final int V3_8_1 = 190;
     public static final int V3_8_0_3 = 189;
     public static final int V3_8_0_2 = 188;
     public static final int V3_8_0 = 186;
@@ -136,6 +137,16 @@ public final class UpgradeService {
         StringBuilder changeLog = new StringBuilder();
 
         // current message
+        if(from >= V3_8_0 && from < V3_8_1) {
+            newVersionString(changeLog, "3.8.1 (8/3/11)", new String[] {
+                    "Fixed issues with Producteev and duplicated notes!",
+                    "Fixed repeat-after-complete for astrid.com users",
+                    "Fixed crash when refreshing new lists",
+                    "Optimized APK size to be 25% smaller",
+                    "Added yearly and minutely repeat settings",
+                    "Fix for crash when editing tasks on Android 1.6",
+            });
+        }
         if(from >= V3_8_0 && from < V3_8_0_3) {
             newVersionString(changeLog, "3.8.0.3 (7/19/11)", new String[] {
                     "Improved Google Tasks Sync migration process",
