@@ -125,7 +125,7 @@ public class TagFilterExposer extends BroadcastReceiver {
                 r.getString(R.string.tag_FEx_untagged),
                 tagService.untaggedTemplate(),
                 null);
-        untagged.listingIcon = ((BitmapDrawable)r.getDrawable(R.drawable.filter_untagged)).getBitmap();
+        untagged.listingIcon = ((BitmapDrawable)r.getDrawable(R.drawable.gl_lists)).getBitmap();
         list.add(untagged);
 
         addTags(list);

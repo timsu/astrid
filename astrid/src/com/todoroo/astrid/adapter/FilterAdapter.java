@@ -21,10 +21,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
 import android.widget.ExpandableListView;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.timsu.astrid.R;
@@ -97,6 +99,7 @@ public class FilterAdapter extends BaseExpandableListAdapter {
         this.listView = listView;
         this.layout = rowLayout;
         this.skipIntentFilters = skipIntentFilters;
+        this.displayMetrics = new DisplayMetrics();
 
         inflater = (LayoutInflater) activity.getSystemService(
                 Context.LAYOUT_INFLATER_SERVICE);
@@ -164,6 +167,7 @@ public class FilterAdapter extends BaseExpandableListAdapter {
             viewHolder.icon = (ImageView)convertView.findViewById(R.id.icon);
             viewHolder.name = (TextView)convertView.findViewById(R.id.name);
             viewHolder.selected = (ImageView)convertView.findViewById(R.id.selected);
+            viewHolder.size = (TextView)convertView.findViewById(R.id.size);
             viewHolder.decoration = null;
             convertView.setTag(viewHolder);
         }
@@ -175,6 +179,8 @@ public class FilterAdapter extends BaseExpandableListAdapter {
         public ImageView expander;
         public ImageView icon;
         public TextView name;
+        public TextView activity;
+        public TextView size;
         public ImageView selected;
         public View view;
         public View decoration;
@@ -250,6 +256,7 @@ public class FilterAdapter extends BaseExpandableListAdapter {
      * ====================================================================== */
 
     private FilterListItem selection = null;
+    private final DisplayMetrics displayMetrics;
 
     /**
      * Sets the selected item to this one
@@ -397,6 +404,7 @@ public class FilterAdapter extends BaseExpandableListAdapter {
 
         viewHolder.view.setBackgroundResource(0);
         viewHolder.expander.setVisibility(View.GONE);
+        viewHolder.size.setVisibility(View.GONE);
 
         if(viewHolder.decoration != null) {
             ((ViewGroup)viewHolder.view).removeView(viewHolder.decoration);
@@ -418,12 +426,23 @@ public class FilterAdapter extends BaseExpandableListAdapter {
         } else {
             viewHolder.name.setTextAppearance(activity, filterStyle);
             viewHolder.view.setPadding((int) ((isChild ? 27 : 7) * metrics.density), 8, 0, 8);
+            viewHolder.name.getLayoutParams().height = 55 * displayMetrics.densityDpi;
         }
 
         viewHolder.icon.setVisibility(filter.listingIcon != null ? View.VISIBLE : View.GONE);
         viewHolder.icon.setImageBitmap(filter.listingIcon);
 
-        viewHolder.name.setText(filter.listingTitle);
+        // title / size
+        if(filter.listingTitle.matches(".* \\(\\d+\\)$")) { //$NON-NLS-1$
+            viewHolder.size.setVisibility(View.VISIBLE);
+            viewHolder.size.setText(filter.listingTitle.substring(filter.listingTitle.lastIndexOf('(') + 1,
+                    filter.listingTitle.length() - 1));
+            viewHolder.name.setText(filter.listingTitle.substring(0, filter.listingTitle.lastIndexOf(' ')));
+        } else
+            viewHolder.name.setText(filter.listingTitle);
+
+        activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+
         if(filter.color != 0)
             viewHolder.name.setTextColor(filter.color);
 
@@ -447,6 +466,9 @@ public class FilterAdapter extends BaseExpandableListAdapter {
             add.setCompoundDrawablesWithIntrinsicBounds(R.drawable.tango_add,0,0,0);
             viewHolder.decoration = add;
             add.setHeight((int)(35 * metrics.density));
+            RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+            lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+            add.setLayoutParams(lp);
             ((ViewGroup)viewHolder.view).addView(add);
 
             add.setOnClickListener(buttonListener);

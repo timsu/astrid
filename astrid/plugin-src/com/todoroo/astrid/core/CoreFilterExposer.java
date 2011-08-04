@@ -47,7 +47,7 @@ public final class CoreFilterExposer extends BroadcastReceiver {
                         TaskCriteria.ownedByMe()).orderBy(
                                 Order.desc(Task.MODIFICATION_DATE)).limit(15),
                 null);
-        recent.listingIcon = ((BitmapDrawable)r.getDrawable(R.drawable.tango_new)).getBitmap();
+        recent.listingIcon = ((BitmapDrawable)r.getDrawable(R.drawable.gl_date)).getBitmap();
 
         // transmit filter list
         FilterListItem[] list = new FilterListItem[2];
@@ -70,7 +70,7 @@ public final class CoreFilterExposer extends BroadcastReceiver {
                                         Criterion.and(MetadataCriteria.withKey(TagService.KEY),
                                                 TagService.TAG.like("x_%", "x"))))))), //$NON-NLS-1$ //$NON-NLS-2$
                 null);
-        inbox.listingIcon = ((BitmapDrawable)r.getDrawable(R.drawable.tango_home)).getBitmap();
+        inbox.listingIcon = ((BitmapDrawable)r.getDrawable(R.drawable.gl_inbox)).getBitmap();
         return inbox;
     }
 

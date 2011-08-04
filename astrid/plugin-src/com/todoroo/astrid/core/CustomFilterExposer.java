@@ -47,7 +47,7 @@ public final class CustomFilterExposer extends BroadcastReceiver {
                 new Intent(context, CustomFilterActivity.class), 0);
         IntentFilter customFilter = new IntentFilter(r.getString(R.string.BFE_Custom),
                 customFilterIntent);
-        customFilter.listingIcon = ((BitmapDrawable)r.getDrawable(R.drawable.gnome_filter)).getBitmap();
+        customFilter.listingIcon = ((BitmapDrawable)r.getDrawable(R.drawable.gl_sliders)).getBitmap();
 
         Filter[] savedFilters = buildSavedFilters(context);
 
