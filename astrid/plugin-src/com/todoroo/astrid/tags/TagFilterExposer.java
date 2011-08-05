@@ -4,7 +4,9 @@
 package com.todoroo.astrid.tags;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -17,7 +19,6 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -139,52 +140,39 @@ public class TagFilterExposer extends BroadcastReceiver {
     }
 
     private void addTags(ArrayList<FilterListItem> list) {
-        HashSet<String> tagNames = new HashSet<String>();
+        HashMap<String, Tag> tags = new HashMap<String, Tag>();
 
-        // active tags
-        Tag[] myTags = tagService.getGroupedTags(TagService.GROUPED_TAGS_BY_SIZE,
-                Criterion.and(TaskCriteria.ownedByMe(), TaskCriteria.activeAndVisible()));
-        for(Tag tag : myTags)
-            tagNames.add(tag.tag);
-        if(myTags.length > 0)
-            list.add(filterFromTags(myTags, R.string.tag_FEx_category_mine));
+        Tag[] tagsByAlpha = tagService.getGroupedTags(TagService.GROUPED_TAGS_BY_ALPHA,
+                TaskCriteria.activeAndVisible());
+        for(Tag tag : tagsByAlpha)
+            tags.put(tag.tag, tag);
 
-        // find all tag data not in active tag list
         TodorooCursor<TagData> cursor = tagDataService.query(Query.select(
                 TagData.NAME, TagData.TASK_COUNT, TagData.REMOTE_ID).where(TagData.DELETION_DATE.eq(0)));
-        ArrayList<Tag> notListed = new ArrayList<Tag>();
         try {
-            ArrayList<Tag> sharedTags = new ArrayList<Tag>();
             for(cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
-                String tagName = cursor.get(TagData.NAME);
-                if(tagNames.contains(tagName))
-                    continue;
-                Tag tag = new Tag(tagName, cursor.get(TagData.TASK_COUNT),
-                        cursor.get(TagData.REMOTE_ID));
-                if(tag.count > 0)
-                    sharedTags.add(tag);
+                TagData tagData = new TagData(cursor);
+                String tagName = tagData.getValue(TagData.NAME);
+                if(tags.containsKey(tagName))
+                    tags.get(tagName).tagData = tagData;
                 else
-                    notListed.add(tag);
-                tagNames.add(tagName);
+                    tags.put(tagName, new Tag(tagData));
             }
-            if(sharedTags.size() > 0)
-                list.add(filterFromTags(sharedTags.toArray(new Tag[sharedTags.size()]), R.string.tag_FEx_category_shared));
         } finally {
             cursor.close();
         }
 
-        // find inactive tags, intersect tag list
-        Tag[] inactiveTags = tagService.getGroupedTags(TagService.GROUPED_TAGS_BY_ALPHA,
-                Criterion.and(TaskCriteria.notDeleted(), Criterion.not(TaskCriteria.activeAndVisible())));
-        for(Tag tag : inactiveTags) {
-            if(!tagNames.contains(tag.tag) && !TextUtils.isEmpty(tag.tag)) {
-                notListed.add(tag);
-                tag.count = 0;
+        ArrayList<Tag> tagList = new ArrayList<Tag>(tags.values());
+        Collections.sort(tagList,
+                new Comparator<Tag>() {
+            @Override
+            public int compare(Tag object1, Tag object2) {
+                return object1.tag.compareTo(object2.tag);
             }
-        }
-        if(notListed.size() > 0)
-            list.add(filterFromTags(notListed.toArray(new Tag[notListed.size()]),
-                    R.string.tag_FEx_category_inactive));
+        });
+
+        list.add(filterFromTags(tagList.toArray(new Tag[tagList.size()]),
+                R.string.tag_FEx_category_inactive));
     }
 
     private FilterCategory filterFromTags(Tag[] tags, int name) {

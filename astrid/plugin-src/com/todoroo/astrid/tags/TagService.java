@@ -84,13 +84,21 @@ public final class TagService {
      */
     public static final class Tag {
         public String tag;
-        int count;
-        long remoteId;
+        public int count;
+        public long remoteId;
+        public TagData tagData = null;
 
         public Tag(String tag, int count, long remoteId) {
             this.tag = tag;
             this.count = count;
             this.remoteId = remoteId;
+        }
+
+        public Tag(TagData tagData) {
+            tag = tagData.getValue(TagData.NAME);
+            count = tagData.getValue(TagData.TASK_COUNT);
+            remoteId = tagData.getValue(TagData.REMOTE_ID);
+            this.tagData = tagData;
         }
 
         @Override
