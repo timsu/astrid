@@ -36,9 +36,9 @@ import com.todoroo.astrid.actfm.TagViewActivity;
 import com.todoroo.astrid.api.AstridApiConstants;
 import com.todoroo.astrid.api.Filter;
 import com.todoroo.astrid.api.FilterCategory;
-import com.todoroo.astrid.api.FilterListHeader;
 import com.todoroo.astrid.api.FilterListItem;
 import com.todoroo.astrid.api.FilterWithCustomIntent;
+import com.todoroo.astrid.api.FilterWithUpdate;
 import com.todoroo.astrid.core.PluginServices;
 import com.todoroo.astrid.dao.TaskDao.TaskCriteria;
 import com.todoroo.astrid.data.Metadata;
@@ -71,7 +71,7 @@ public class TagFilterExposer extends BroadcastReceiver {
         contentValues.put(Metadata.KEY.name, TagService.KEY);
         contentValues.put(TagService.TAG.name, tag.tag);
 
-        FilterWithCustomIntent filter = new FilterWithCustomIntent(listTitle,
+        FilterWithUpdate filter = new FilterWithUpdate(listTitle,
                 title, tagTemplate,
                 contentValues);
         if(tag.count == 0)
@@ -86,6 +86,10 @@ public class TagFilterExposer extends BroadcastReceiver {
                 newTagIntent(context, DeleteTagActivity.class, tag)
         };
         filter.customTaskList = new ComponentName(ContextManager.getContext(), TagViewActivity.class);
+        if(tag.tagData != null) {
+            filter.imageUrl = tag.tagData.getValue(TagData.PICTURE);
+            filter.updateText = "We can awesome.";
+        }
         Bundle extras = new Bundle();
         extras.putString(TagViewActivity.EXTRA_TAG_NAME, tag.tag);
         extras.putLong(TagViewActivity.EXTRA_TAG_REMOTE_ID, tag.remoteId);
@@ -116,10 +120,6 @@ public class TagFilterExposer extends BroadcastReceiver {
 
         Resources r = context.getResources();
         ArrayList<FilterListItem> list = new ArrayList<FilterListItem>();
-
-        // --- header
-        FilterListHeader tagsHeader = new FilterListHeader(context.getString(R.string.tag_FEx_header));
-        list.add(tagsHeader);
 
         // --- untagged
         Filter untagged = new Filter(r.getString(R.string.tag_FEx_untagged),
@@ -172,7 +172,7 @@ public class TagFilterExposer extends BroadcastReceiver {
         });
 
         list.add(filterFromTags(tagList.toArray(new Tag[tagList.size()]),
-                R.string.tag_FEx_category_inactive));
+                R.string.tag_FEx_header));
     }
 
     private FilterCategory filterFromTags(Tag[] tags, int name) {

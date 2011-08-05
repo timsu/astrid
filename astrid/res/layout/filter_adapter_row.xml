@@ -29,6 +29,17 @@
         android:paddingLeft="10dip" 
         android:paddingRight="10dip" 
         android:visibility="gone"/>
+        
+    <!-- filter url image icon -->
+    <greendroid.widget.AsyncImageView android:id="@+id/url_image"
+        android:layout_width="50dip"
+        android:layout_height="50dip"
+        android:layout_toRightOf="@id/expander"
+        android:scaleType="fitCenter"
+        android:layout_marginTop="2dp" 
+        android:paddingLeft="5dip" 
+        android:paddingRight="5dip" 
+        android:visibility="gone"/>
             
     <!-- filter name -->
     <TextView android:id="@+id/name"

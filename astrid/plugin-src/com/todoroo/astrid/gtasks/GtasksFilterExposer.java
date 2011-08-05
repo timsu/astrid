@@ -23,7 +23,6 @@ import com.todoroo.andlib.sql.QueryTemplate;
 import com.todoroo.astrid.api.AstridApiConstants;
 import com.todoroo.astrid.api.Filter;
 import com.todoroo.astrid.api.FilterCategory;
-import com.todoroo.astrid.api.FilterListHeader;
 import com.todoroo.astrid.api.FilterListItem;
 import com.todoroo.astrid.api.FilterWithCustomIntent;
 import com.todoroo.astrid.api.PermaSql;
@@ -91,14 +90,12 @@ public class GtasksFilterExposer extends BroadcastReceiver {
         for(int i = 0; i < lists.length; i++)
             listFilters[i] = filterFromList(context, lists[i]);
 
-        FilterListHeader header = new FilterListHeader(context.getString(R.string.gtasks_FEx_header));
-        FilterCategory listsCategory = new FilterCategory(context.getString(R.string.gtasks_FEx_list),
+        FilterCategory listsCategory = new FilterCategory(context.getString(R.string.gtasks_FEx_header),
                 listFilters);
 
         // transmit filter list
-        FilterListItem[] list = new FilterListItem[2];
-        list[0] = header;
-        list[1] = listsCategory;
+        FilterListItem[] list = new FilterListItem[1];
+        list[0] = listsCategory;
         Intent broadcastIntent = new Intent(AstridApiConstants.BROADCAST_SEND_FILTERS);
         broadcastIntent.putExtra(AstridApiConstants.EXTRAS_ADDON, GtasksPreferenceService.IDENTIFIER);
         broadcastIntent.putExtra(AstridApiConstants.EXTRAS_RESPONSE, list);

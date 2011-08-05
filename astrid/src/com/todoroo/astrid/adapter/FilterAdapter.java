@@ -3,6 +3,8 @@
  */
 package com.todoroo.astrid.adapter;
 
+import greendroid.widget.AsyncImageView;
+
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -38,6 +40,7 @@ import com.todoroo.astrid.api.Filter;
 import com.todoroo.astrid.api.FilterCategory;
 import com.todoroo.astrid.api.FilterListHeader;
 import com.todoroo.astrid.api.FilterListItem;
+import com.todoroo.astrid.api.FilterWithUpdate;
 import com.todoroo.astrid.gtasks.GtasksListAdder;
 import com.todoroo.astrid.service.TaskService;
 import com.todoroo.astrid.tags.TagsPlugin;
@@ -165,7 +168,9 @@ public class FilterAdapter extends BaseExpandableListAdapter {
             viewHolder.view = convertView;
             viewHolder.expander = (ImageView)convertView.findViewById(R.id.expander);
             viewHolder.icon = (ImageView)convertView.findViewById(R.id.icon);
+            viewHolder.urlImage = (AsyncImageView)convertView.findViewById(R.id.url_image);
             viewHolder.name = (TextView)convertView.findViewById(R.id.name);
+            viewHolder.activity = (TextView)convertView.findViewById(R.id.activity);
             viewHolder.selected = (ImageView)convertView.findViewById(R.id.selected);
             viewHolder.size = (TextView)convertView.findViewById(R.id.size);
             viewHolder.decoration = null;
@@ -178,6 +183,7 @@ public class FilterAdapter extends BaseExpandableListAdapter {
         public FilterListItem item;
         public ImageView expander;
         public ImageView icon;
+        public AsyncImageView urlImage;
         public TextView name;
         public TextView activity;
         public TextView size;
@@ -215,7 +221,7 @@ public class FilterAdapter extends BaseExpandableListAdapter {
         convertView = newView(convertView, parent);
         ViewHolder viewHolder = (ViewHolder) convertView.getTag();
         viewHolder.item = (FilterListItem) getChild(groupPosition, childPosition);
-        populateView(viewHolder, true, false);
+        populateView(viewHolder, false);
 
         return convertView;
     }
@@ -243,7 +249,7 @@ public class FilterAdapter extends BaseExpandableListAdapter {
         convertView = newView(convertView, parent);
         ViewHolder viewHolder = (ViewHolder) convertView.getTag();
         viewHolder.item = (FilterListItem) getGroup(groupPosition);
-        populateView(viewHolder, false, isExpanded);
+        populateView(viewHolder, isExpanded);
         return convertView;
     }
 
@@ -397,25 +403,28 @@ public class FilterAdapter extends BaseExpandableListAdapter {
      * ================================================================ views
      * ====================================================================== */
 
-    public void populateView(ViewHolder viewHolder, boolean isChild, boolean isExpanded) {
+    public void populateView(ViewHolder viewHolder, boolean isExpanded) {
         FilterListItem filter = viewHolder.item;
         if(filter == null)
             return;
 
         viewHolder.view.setBackgroundResource(0);
-        viewHolder.expander.setVisibility(View.GONE);
-        viewHolder.size.setVisibility(View.GONE);
+        viewHolder.view.setPadding((int) (7 * metrics.density), 8, 0, 8);
+        viewHolder.name.setTextAppearance(activity, filterStyle);
+        viewHolder.name.getLayoutParams().height = 55 * displayMetrics.densityDpi;
 
         if(viewHolder.decoration != null) {
             ((ViewGroup)viewHolder.view).removeView(viewHolder.decoration);
             viewHolder.decoration = null;
         }
 
-        if(viewHolder.item instanceof FilterListHeader) {
+        if(viewHolder.item instanceof FilterListHeader || viewHolder.item instanceof FilterCategory) {
             viewHolder.name.setTextAppearance(activity, headerStyle);
             viewHolder.view.setBackgroundResource(R.drawable.edit_titlebar);
-            viewHolder.view.setPadding((int) ((isChild ? 33 : 7) * metrics.density), 5, 0, 5);
-        } else if(viewHolder.item instanceof FilterCategory) {
+            viewHolder.view.setPadding((int) (7 * metrics.density), 5, 0, 5);
+        }
+
+        if(viewHolder.item instanceof FilterCategory) {
             viewHolder.expander.setVisibility(View.VISIBLE);
             if(isExpanded)
                 viewHolder.expander.setImageResource(R.drawable.expander_ic_maximized);
@@ -423,14 +432,28 @@ public class FilterAdapter extends BaseExpandableListAdapter {
                 viewHolder.expander.setImageResource(R.drawable.expander_ic_minimized);
             viewHolder.name.setTextAppearance(activity, categoryStyle);
             viewHolder.view.setPadding((int)(7 * metrics.density), 8, 0, 8);
+        } else
+            viewHolder.expander.setVisibility(View.GONE);
+
+        // update with filter attributes (listing icon, url, update text, size)
+
+        if(filter.listingIcon != null) {
+            viewHolder.icon.setVisibility(View.VISIBLE);
+            viewHolder.icon.setImageBitmap(filter.listingIcon);
+        } else
+            viewHolder.icon.setVisibility(View.GONE);
+
+        if(filter instanceof FilterWithUpdate) {
+            viewHolder.urlImage.setUrl(((FilterWithUpdate)filter).imageUrl);
+            viewHolder.activity.setText(((FilterWithUpdate)filter).updateText);
+            viewHolder.urlImage.setVisibility(View.VISIBLE);
+            viewHolder.activity.setVisibility(View.VISIBLE);
+            viewHolder.name.getLayoutParams().height = 30 * displayMetrics.densityDpi;
         } else {
-            viewHolder.name.setTextAppearance(activity, filterStyle);
-            viewHolder.view.setPadding((int) ((isChild ? 27 : 7) * metrics.density), 8, 0, 8);
+            viewHolder.urlImage.setVisibility(View.GONE);
+            viewHolder.activity.setVisibility(View.GONE);
             viewHolder.name.getLayoutParams().height = 55 * displayMetrics.densityDpi;
         }
-
-        viewHolder.icon.setVisibility(filter.listingIcon != null ? View.VISIBLE : View.GONE);
-        viewHolder.icon.setImageBitmap(filter.listingIcon);
 
         // title / size
         if(filter.listingTitle.matches(".* \\(\\d+\\)$")) { //$NON-NLS-1$
@@ -438,10 +461,10 @@ public class FilterAdapter extends BaseExpandableListAdapter {
             viewHolder.size.setText(filter.listingTitle.substring(filter.listingTitle.lastIndexOf('(') + 1,
                     filter.listingTitle.length() - 1));
             viewHolder.name.setText(filter.listingTitle.substring(0, filter.listingTitle.lastIndexOf(' ')));
-        } else
+        } else {
             viewHolder.name.setText(filter.listingTitle);
-
-        activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+            viewHolder.size.setVisibility(View.GONE);
+        }
 
         if(filter.color != 0)
             viewHolder.name.setTextColor(filter.color);
@@ -458,7 +481,7 @@ public class FilterAdapter extends BaseExpandableListAdapter {
     }
 
     private void setupCustomHeader(ViewHolder viewHolder, String forTitle, View.OnClickListener buttonListener) {
-        if(viewHolder.item instanceof FilterListHeader &&
+        if(viewHolder.item instanceof FilterCategory &&
                 viewHolder.item.listingTitle.equals(forTitle)) {
             Button add = new Button(activity);
             add.setText(R.string.tag_FEx_add_new);
