@@ -18,6 +18,7 @@ import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -102,7 +103,6 @@ public class FilterAdapter extends BaseExpandableListAdapter {
         this.listView = listView;
         this.layout = rowLayout;
         this.skipIntentFilters = skipIntentFilters;
-        this.displayMetrics = new DisplayMetrics();
 
         inflater = (LayoutInflater) activity.getSystemService(
                 Context.LAYOUT_INFLATER_SERVICE);
@@ -262,7 +262,6 @@ public class FilterAdapter extends BaseExpandableListAdapter {
      * ====================================================================== */
 
     private FilterListItem selection = null;
-    private final DisplayMetrics displayMetrics;
 
     /**
      * Sets the selected item to this one
@@ -409,9 +408,6 @@ public class FilterAdapter extends BaseExpandableListAdapter {
             return;
 
         viewHolder.view.setBackgroundResource(0);
-        viewHolder.view.setPadding((int) (7 * metrics.density), 8, 0, 8);
-        viewHolder.name.setTextAppearance(activity, filterStyle);
-        viewHolder.name.getLayoutParams().height = 55 * displayMetrics.densityDpi;
 
         if(viewHolder.decoration != null) {
             ((ViewGroup)viewHolder.view).removeView(viewHolder.decoration);
@@ -422,37 +418,29 @@ public class FilterAdapter extends BaseExpandableListAdapter {
             viewHolder.name.setTextAppearance(activity, headerStyle);
             viewHolder.view.setBackgroundResource(R.drawable.edit_titlebar);
             viewHolder.view.setPadding((int) (7 * metrics.density), 5, 0, 5);
+            viewHolder.view.getLayoutParams().height = (int) (40 * metrics.density);
+        } else {
+            viewHolder.name.setTextAppearance(activity, filterStyle);
+            viewHolder.view.setPadding((int) (7 * metrics.density), 8, 0, 8);
+            viewHolder.view.getLayoutParams().height = (int) (58 * metrics.density);
         }
 
         if(viewHolder.item instanceof FilterCategory) {
             viewHolder.expander.setVisibility(View.VISIBLE);
-            if(isExpanded)
-                viewHolder.expander.setImageResource(R.drawable.expander_ic_maximized);
-            else
-                viewHolder.expander.setImageResource(R.drawable.expander_ic_minimized);
-            viewHolder.name.setTextAppearance(activity, categoryStyle);
-            viewHolder.view.setPadding((int)(7 * metrics.density), 8, 0, 8);
+            viewHolder.expander.setImageResource(isExpanded ?
+                    R.drawable.expander_ic_maximized : R.drawable.expander_ic_minimized);
         } else
             viewHolder.expander.setVisibility(View.GONE);
 
         // update with filter attributes (listing icon, url, update text, size)
 
+        viewHolder.urlImage.setVisibility(View.GONE);
+        viewHolder.activity.setVisibility(View.GONE);
+        viewHolder.icon.setVisibility(View.GONE);
+
         if(filter.listingIcon != null) {
             viewHolder.icon.setVisibility(View.VISIBLE);
             viewHolder.icon.setImageBitmap(filter.listingIcon);
-        } else
-            viewHolder.icon.setVisibility(View.GONE);
-
-        if(filter instanceof FilterWithUpdate) {
-            viewHolder.urlImage.setUrl(((FilterWithUpdate)filter).imageUrl);
-            viewHolder.activity.setText(((FilterWithUpdate)filter).updateText);
-            viewHolder.urlImage.setVisibility(View.VISIBLE);
-            viewHolder.activity.setVisibility(View.VISIBLE);
-            viewHolder.name.getLayoutParams().height = 30 * displayMetrics.densityDpi;
-        } else {
-            viewHolder.urlImage.setVisibility(View.GONE);
-            viewHolder.activity.setVisibility(View.GONE);
-            viewHolder.name.getLayoutParams().height = 55 * displayMetrics.densityDpi;
         }
 
         // title / size
@@ -464,6 +452,24 @@ public class FilterAdapter extends BaseExpandableListAdapter {
         } else {
             viewHolder.name.setText(filter.listingTitle);
             viewHolder.size.setVisibility(View.GONE);
+        }
+
+        viewHolder.name.getLayoutParams().height = (int) (58 * metrics.density);
+        if(filter instanceof FilterWithUpdate) {
+            viewHolder.urlImage.setVisibility(View.VISIBLE);
+            if(((FilterWithUpdate)filter).imageUrl == null) {
+                viewHolder.urlImage.setImageResource(R.drawable.gl_list);
+                viewHolder.urlImage.setPadding((int)(8 * metrics.density), 0,
+                        (int) (8 * metrics.density), 0);
+            } else {
+                viewHolder.urlImage.setUrl(((FilterWithUpdate)filter).imageUrl);
+                viewHolder.urlImage.setPadding(0,0,0,0);
+            }
+            if(!TextUtils.isEmpty(((FilterWithUpdate)filter).updateText)) {
+                viewHolder.activity.setText(((FilterWithUpdate)filter).updateText);
+                viewHolder.name.getLayoutParams().height = (int) (25 * metrics.density);
+                viewHolder.activity.setVisibility(View.VISIBLE);
+            }
         }
 
         if(filter.color != 0)

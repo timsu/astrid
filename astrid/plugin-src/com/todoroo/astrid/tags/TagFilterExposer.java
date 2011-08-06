@@ -86,10 +86,9 @@ public class TagFilterExposer extends BroadcastReceiver {
                 newTagIntent(context, DeleteTagActivity.class, tag)
         };
         filter.customTaskList = new ComponentName(ContextManager.getContext(), TagViewActivity.class);
-        if(tag.tagData != null) {
-            filter.imageUrl = tag.tagData.getValue(TagData.PICTURE);
-            filter.updateText = "We can awesome.";
-        }
+        if(tag.image!= null)
+            filter.imageUrl = tag.image;
+        filter.updateText = "We can awesome.";
         Bundle extras = new Bundle();
         extras.putString(TagViewActivity.EXTRA_TAG_NAME, tag.tag);
         extras.putLong(TagViewActivity.EXTRA_TAG_REMOTE_ID, tag.remoteId);
@@ -147,16 +146,14 @@ public class TagFilterExposer extends BroadcastReceiver {
         for(Tag tag : tagsByAlpha)
             tags.put(tag.tag, tag);
 
-        TodorooCursor<TagData> cursor = tagDataService.query(Query.select(
-                TagData.NAME, TagData.TASK_COUNT, TagData.REMOTE_ID).where(TagData.DELETION_DATE.eq(0)));
+        TodorooCursor<TagData> cursor = tagDataService.query(Query.select(TagData.ID,
+                TagData.NAME, TagData.TASK_COUNT, TagData.REMOTE_ID, TagData.PICTURE).where(TagData.DELETION_DATE.eq(0)));
+        System.err.println("GOT CURSOR " + cursor.getCount());
         try {
             for(cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                 TagData tagData = new TagData(cursor);
                 String tagName = tagData.getValue(TagData.NAME);
-                if(tags.containsKey(tagName))
-                    tags.get(tagName).tagData = tagData;
-                else
-                    tags.put(tagName, new Tag(tagData));
+                tags.put(tagName, new Tag(tagData));
             }
         } finally {
             cursor.close();

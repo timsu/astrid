@@ -86,7 +86,7 @@ public final class TagService {
         public String tag;
         public int count;
         public long remoteId;
-        public TagData tagData = null;
+        public String image;
 
         public Tag(String tag, int count, long remoteId) {
             this.tag = tag;
@@ -98,7 +98,7 @@ public final class TagService {
             tag = tagData.getValue(TagData.NAME);
             count = tagData.getValue(TagData.TASK_COUNT);
             remoteId = tagData.getValue(TagData.REMOTE_ID);
-            this.tagData = tagData;
+            image = tagData.getValue(TagData.PICTURE);
         }
 
         @Override

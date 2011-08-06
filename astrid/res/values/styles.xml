@@ -100,7 +100,7 @@
     
     <style name="TextAppearance.FLA_Header" parent="TextAppearance.FLA_Filter">
         <item name="android:textColor">#ffdddddd</item>
-        <item name="android:textStyle"></item>
+        <item name="android:textStyle">bold</item>
     </style>
     
     <style name="TextAppearance.FLA_Category" parent="TextAppearance.FLA_Filter">
