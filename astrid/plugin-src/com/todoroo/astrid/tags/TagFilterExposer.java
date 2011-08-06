@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map.Entry;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -19,6 +21,7 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -43,6 +46,7 @@ import com.todoroo.astrid.core.PluginServices;
 import com.todoroo.astrid.dao.TaskDao.TaskCriteria;
 import com.todoroo.astrid.data.Metadata;
 import com.todoroo.astrid.data.TagData;
+import com.todoroo.astrid.data.Update;
 import com.todoroo.astrid.service.AstridDependencyInjector;
 import com.todoroo.astrid.service.TagDataService;
 import com.todoroo.astrid.tags.TagService.Tag;
@@ -86,9 +90,10 @@ public class TagFilterExposer extends BroadcastReceiver {
                 newTagIntent(context, DeleteTagActivity.class, tag)
         };
         filter.customTaskList = new ComponentName(ContextManager.getContext(), TagViewActivity.class);
-        if(tag.image!= null)
+        if(tag.image != null)
             filter.imageUrl = tag.image;
-        filter.updateText = "We can awesome.";
+        if(tag.updateText != null)
+            filter.updateText = tag.updateText;
         Bundle extras = new Bundle();
         extras.putString(TagViewActivity.EXTRA_TAG_NAME, tag.tag);
         extras.putLong(TagViewActivity.EXTRA_TAG_REMOTE_ID, tag.remoteId);
@@ -117,17 +122,9 @@ public class TagFilterExposer extends BroadcastReceiver {
         ContextManager.setContext(context);
         tagService = TagService.getInstance();
 
-        Resources r = context.getResources();
         ArrayList<FilterListItem> list = new ArrayList<FilterListItem>();
 
         // --- untagged
-        Filter untagged = new Filter(r.getString(R.string.tag_FEx_untagged),
-                r.getString(R.string.tag_FEx_untagged),
-                tagService.untaggedTemplate(),
-                null);
-        untagged.listingIcon = ((BitmapDrawable)r.getDrawable(R.drawable.gl_lists)).getBitmap();
-        list.add(untagged);
-
         addTags(list);
 
         // transmit filter list
@@ -143,17 +140,26 @@ public class TagFilterExposer extends BroadcastReceiver {
 
         Tag[] tagsByAlpha = tagService.getGroupedTags(TagService.GROUPED_TAGS_BY_ALPHA,
                 TaskCriteria.activeAndVisible());
-        for(Tag tag : tagsByAlpha)
-            tags.put(tag.tag, tag);
+        for(Tag tag : tagsByAlpha) {
+            System.err.format("COMING IN '%s'\n", tag.tag);
+            if(!TextUtils.isEmpty(tag.tag))
+                tags.put(tag.tag, tag);
+        }
 
-        TodorooCursor<TagData> cursor = tagDataService.query(Query.select(TagData.ID,
-                TagData.NAME, TagData.TASK_COUNT, TagData.REMOTE_ID, TagData.PICTURE).where(TagData.DELETION_DATE.eq(0)));
-        System.err.println("GOT CURSOR " + cursor.getCount());
+        TodorooCursor<TagData> cursor = tagDataService.query(Query.select(TagData.PROPERTIES));
         try {
+            TagData tagData = new TagData();
             for(cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
-                TagData tagData = new TagData(cursor);
-                String tagName = tagData.getValue(TagData.NAME);
-                tags.put(tagName, new Tag(tagData));
+                tagData.readFromCursor(cursor);
+                String tagName = tagData.getValue(TagData.NAME).trim();
+                Tag tag = new Tag(tagData);
+                if(tagData.getValue(TagData.DELETION_DATE) > 0 && !tags.containsKey(tagName)) continue;
+                System.err.format("COMING IN '%s'\n", tag.tag);
+                tags.put(tagName, tag);
+
+                Update update = tagDataService.getLatestUpdate(tagData);
+                if(update != null)
+                    tag.updateText = update.toString();
             }
         } finally {
             cursor.close();
@@ -167,16 +173,30 @@ public class TagFilterExposer extends BroadcastReceiver {
                 return object1.tag.compareTo(object2.tag);
             }
         });
+        for(Iterator<Entry<String, Tag>> i = tags.entrySet().iterator(); i.hasNext(); ) {
+            Entry<String, Tag> entry = i.next();
+            if(TextUtils.isEmpty(entry.getValue().tag))
+                i.remove();
+        }
 
         list.add(filterFromTags(tagList.toArray(new Tag[tagList.size()]),
                 R.string.tag_FEx_header));
     }
 
     private FilterCategory filterFromTags(Tag[] tags, int name) {
-        Filter[] filters = new Filter[tags.length];
+        Filter[] filters = new Filter[tags.length + 1];
+        Resources r = ContextManager.getContext().getResources();
+
+        Filter untagged = new Filter(r.getString(R.string.tag_FEx_untagged),
+                r.getString(R.string.tag_FEx_untagged),
+                tagService.untaggedTemplate(),
+                null);
+        untagged.listingIcon = ((BitmapDrawable)r.getDrawable(R.drawable.gl_lists)).getBitmap();
+        filters[0] = untagged;
+
         Context context = ContextManager.getContext();
         for(int i = 0; i < tags.length; i++)
-            filters[i] = filterFromTag(context, tags[i], TaskCriteria.activeAndVisible());
+            filters[i + 1] = filterFromTag(context, tags[i], TaskCriteria.activeAndVisible());
         return new FilterCategory(context.getString(name), filters);
     }
 

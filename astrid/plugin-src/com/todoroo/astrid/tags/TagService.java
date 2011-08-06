@@ -87,6 +87,7 @@ public final class TagService {
         public int count;
         public long remoteId;
         public String image;
+        public String updateText;
 
         public Tag(String tag, int count, long remoteId) {
             this.tag = tag;
