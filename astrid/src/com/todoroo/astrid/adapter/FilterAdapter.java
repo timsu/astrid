@@ -457,7 +457,7 @@ public class FilterAdapter extends BaseExpandableListAdapter {
         viewHolder.name.getLayoutParams().height = (int) (58 * metrics.density);
         if(filter instanceof FilterWithUpdate) {
             viewHolder.urlImage.setVisibility(View.VISIBLE);
-            if(((FilterWithUpdate)filter).imageUrl == null) {
+            if(TextUtils.isEmpty(((FilterWithUpdate)filter).imageUrl)) {
                 viewHolder.urlImage.setImageResource(R.drawable.gl_list);
                 viewHolder.urlImage.setPadding((int)(8 * metrics.density), 0,
                         (int) (8 * metrics.density), 0);

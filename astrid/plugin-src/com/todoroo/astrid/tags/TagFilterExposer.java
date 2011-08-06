@@ -140,11 +140,9 @@ public class TagFilterExposer extends BroadcastReceiver {
 
         Tag[] tagsByAlpha = tagService.getGroupedTags(TagService.GROUPED_TAGS_BY_ALPHA,
                 TaskCriteria.activeAndVisible());
-        for(Tag tag : tagsByAlpha) {
-            System.err.format("COMING IN '%s'\n", tag.tag);
+        for(Tag tag : tagsByAlpha)
             if(!TextUtils.isEmpty(tag.tag))
                 tags.put(tag.tag, tag);
-        }
 
         TodorooCursor<TagData> cursor = tagDataService.query(Query.select(TagData.PROPERTIES));
         try {
@@ -154,7 +152,8 @@ public class TagFilterExposer extends BroadcastReceiver {
                 String tagName = tagData.getValue(TagData.NAME).trim();
                 Tag tag = new Tag(tagData);
                 if(tagData.getValue(TagData.DELETION_DATE) > 0 && !tags.containsKey(tagName)) continue;
-                System.err.format("COMING IN '%s'\n", tag.tag);
+                if(TextUtils.isEmpty(tag.tag))
+                    continue;
                 tags.put(tagName, tag);
 
                 Update update = tagDataService.getLatestUpdate(tagData);
