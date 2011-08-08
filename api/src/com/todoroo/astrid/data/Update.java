@@ -4,11 +4,8 @@
 package com.todoroo.astrid.data;
 
 
-import org.json.JSONObject;
-
 import android.content.ContentValues;
 import android.net.Uri;
-import android.text.TextUtils;
 
 import com.todoroo.andlib.data.AbstractModel;
 import com.todoroo.andlib.data.Property;
@@ -16,7 +13,6 @@ import com.todoroo.andlib.data.Property.LongProperty;
 import com.todoroo.andlib.data.Property.StringProperty;
 import com.todoroo.andlib.data.Table;
 import com.todoroo.andlib.data.TodorooCursor;
-import com.todoroo.astrid.actfm.sync.ActFmPreferenceService;
 import com.todoroo.astrid.api.AstridApiConstants;
 
 /**
@@ -111,19 +107,6 @@ public class Update extends RemoteModel {
         defaultValues.put(MESSAGE.name, "");
         defaultValues.put(TARGET_NAME.name, "");
         defaultValues.put(PICTURE.name, "");
-    }
-
-    @Override
-    public String toString() {
-        JSONObject user = ActFmPreferenceService.userFromModel(this);
-        String description = this.getValue(Update.ACTION);
-        String message = this.getValue(Update.MESSAGE);
-        if(this.getValue(Update.ACTION_CODE).equals("task_comment") ||
-                this.getValue(Update.ACTION_CODE).equals("tag_comment"))
-            description = message;
-        else if(!TextUtils.isEmpty(message))
-            description += " " + message;
-        return String.format("%s: %s", user.optString("name"), description);
     }
 
     // --- data access boilerplate

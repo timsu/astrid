@@ -36,6 +36,7 @@ import com.todoroo.andlib.sql.QueryTemplate;
 import com.todoroo.andlib.utility.DateUtilities;
 import com.todoroo.andlib.utility.DialogUtilities;
 import com.todoroo.astrid.actfm.TagViewActivity;
+import com.todoroo.astrid.actfm.sync.ActFmPreferenceService;
 import com.todoroo.astrid.api.AstridApiConstants;
 import com.todoroo.astrid.api.Filter;
 import com.todoroo.astrid.api.FilterCategory;
@@ -158,7 +159,7 @@ public class TagFilterExposer extends BroadcastReceiver {
 
                 Update update = tagDataService.getLatestUpdate(tagData);
                 if(update != null)
-                    tag.updateText = update.toString();
+                    tag.updateText = ActFmPreferenceService.updateToString(update);
             }
         } finally {
             cursor.close();
