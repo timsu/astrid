@@ -20,20 +20,20 @@
         
     <!-- filter icon -->
     <ImageView android:id="@+id/icon"
-        android:layout_width="30dip"
-        android:layout_height="wrap_content"
+        android:layout_width="25dip"
+        android:layout_height="50dip"
         android:layout_toRightOf="@id/expander"
-        android:layout_marginTop="8dp" 
+        android:layout_marginTop="4dp" 
         android:layout_marginLeft="7dip"
         android:scaleType="fitCenter"
         android:visibility="gone"/>
         
     <!-- filter url image icon -->
     <greendroid.widget.AsyncImageView android:id="@+id/url_image"
-        android:layout_width="35dip"
-        android:layout_height="35dip"
+        android:layout_width="30dip"
+        android:layout_height="50dip"
         android:layout_toRightOf="@id/expander"
-        android:layout_marginTop="8dp" 
+        android:layout_marginTop="4dp" 
         android:layout_marginLeft="5dip"
         android:scaleType="fitCenter"
         android:visibility="gone"/>

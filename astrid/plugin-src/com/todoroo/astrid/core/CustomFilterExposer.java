@@ -83,6 +83,7 @@ public final class CustomFilterExposer extends BroadcastReceiver {
                     todayTitle,
                     new QueryTemplate().where(
                             Criterion.and(TaskCriteria.activeVisibleMine(),
+                                    Task.DUE_DATE.gt(0),
                                     Task.DUE_DATE.lte(PermaSql.VALUE_EOD))),
                     todayValues);
             list[0].listingIcon = ((BitmapDrawable)r.getDrawable(R.drawable.gl_date)).getBitmap();
