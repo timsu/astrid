@@ -11,6 +11,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import android.app.Activity;
+import android.app.PendingIntent.CanceledException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -39,12 +40,11 @@ import com.todoroo.andlib.utility.Preferences;
 import com.todoroo.astrid.api.AstridApiConstants;
 import com.todoroo.astrid.api.Filter;
 import com.todoroo.astrid.api.FilterCategory;
+import com.todoroo.astrid.api.FilterCategoryWithNewButton;
 import com.todoroo.astrid.api.FilterListHeader;
 import com.todoroo.astrid.api.FilterListItem;
 import com.todoroo.astrid.api.FilterWithUpdate;
-import com.todoroo.astrid.gtasks.GtasksListAdder;
 import com.todoroo.astrid.service.TaskService;
-import com.todoroo.astrid.tags.TagsPlugin;
 
 public class FilterAdapter extends BaseExpandableListAdapter {
 
@@ -482,46 +482,30 @@ public class FilterAdapter extends BaseExpandableListAdapter {
         } else
             viewHolder.selected.setVisibility(View.GONE);
 
-        updateForActFm(viewHolder);
-        updateForGtasks(viewHolder);
+        if(filter instanceof FilterCategoryWithNewButton)
+            setupCustomHeader(viewHolder, (FilterCategoryWithNewButton) filter);
     }
 
-    private void setupCustomHeader(ViewHolder viewHolder, String forTitle, View.OnClickListener buttonListener) {
-        if(viewHolder.item instanceof FilterCategory &&
-                viewHolder.item.listingTitle.equals(forTitle)) {
-            Button add = new Button(activity);
-            add.setText(R.string.tag_FEx_add_new);
-            add.setBackgroundResource(android.R.drawable.btn_default_small);
-            add.setCompoundDrawablesWithIntrinsicBounds(R.drawable.tango_add,0,0,0);
-            viewHolder.decoration = add;
-            add.setHeight((int)(35 * metrics.density));
-            RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-            lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
-            add.setLayoutParams(lp);
-            ((ViewGroup)viewHolder.view).addView(add);
+    private void setupCustomHeader(ViewHolder viewHolder, final FilterCategoryWithNewButton filter) {
+        Button add = new Button(activity);
+        add.setText(filter.label);
+        add.setBackgroundResource(android.R.drawable.btn_default_small);
+        add.setCompoundDrawablesWithIntrinsicBounds(R.drawable.tango_add,0,0,0);
+        viewHolder.decoration = add;
+        add.setHeight((int)(35 * metrics.density));
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+        add.setLayoutParams(lp);
+        ((ViewGroup)viewHolder.view).addView(add);
 
-            add.setOnClickListener(buttonListener);
-        }
-    }
-
-    private void updateForActFm(ViewHolder viewHolder) {
-        setupCustomHeader(viewHolder,
-                activity.getString(R.string.tag_FEx_header),
-                new View.OnClickListener() {
+        add.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        new TagsPlugin().showNewTagDialog(activity);
-                    }
-                });
-    }
-
-    private void updateForGtasks(ViewHolder viewHolder) {
-        setupCustomHeader(viewHolder,
-                activity.getString(R.string.gtasks_FEx_header),
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        new GtasksListAdder().showNewListDialog(activity);
+                        try {
+                            filter.intent.send();
+                        } catch (CanceledException e) {
+                            // do nothing
+                        }
                     }
                 });
     }

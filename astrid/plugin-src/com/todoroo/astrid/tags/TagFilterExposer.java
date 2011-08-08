@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentValues;
@@ -40,6 +41,7 @@ import com.todoroo.astrid.actfm.sync.ActFmPreferenceService;
 import com.todoroo.astrid.api.AstridApiConstants;
 import com.todoroo.astrid.api.Filter;
 import com.todoroo.astrid.api.FilterCategory;
+import com.todoroo.astrid.api.FilterCategoryWithNewButton;
 import com.todoroo.astrid.api.FilterListItem;
 import com.todoroo.astrid.api.FilterWithCustomIntent;
 import com.todoroo.astrid.api.FilterWithUpdate;
@@ -197,7 +199,11 @@ public class TagFilterExposer extends BroadcastReceiver {
         Context context = ContextManager.getContext();
         for(int i = 0; i < tags.length; i++)
             filters[i + 1] = filterFromTag(context, tags[i], TaskCriteria.activeAndVisible());
-        return new FilterCategory(context.getString(name), filters);
+        FilterCategoryWithNewButton filter = new FilterCategoryWithNewButton(context.getString(name), filters);
+        filter.label = r.getString(R.string.tag_FEx_add_new);
+        filter.intent = PendingIntent.getActivity(context, 0,
+                TagsPlugin.newTagDialog(context), 0);
+        return filter;
     }
 
     // --- tag manipulation activities
